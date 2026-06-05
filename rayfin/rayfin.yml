@@ -1,0 +1,24 @@
+id: wasm
+name: wasm
+version: 1.0.0
+services:
+  auth:
+    enabled: true
+    fabric:
+      enabled: true
+    password:
+      enabled: true
+    allowedRedirectUris:
+      - http://localhost:5173
+      # `rayfin up` adds your deployed hosting URL here automatically.
+  data:
+    enabled: false
+  staticHosting:
+    enabled: true
+    folder: dist
+    buildCommand: npm run build:fabric
+    indexDocument: index.html
+  storage:
+    enabled: false
+  functions:
+    enabled: false

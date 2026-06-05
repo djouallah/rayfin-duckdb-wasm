@@ -1,0 +1,56 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencies
+node_modules
+
+# Build output
+dist
+dist-ssr
+*.tsbuildinfo
+.vite
+
+# Test coverage
+coverage
+
+# Local env files (`*.local` matches `.env.local`, `.env.*.local`, etc.)
+*.local
+
+# Rayfin — auto-generated or secret-bearing files
+# `rayfin/.env*` covers .env, .env.bak (emitted by env-file v2 migration with
+# secrets), and any future .env-family files Rayfin's runtime adds.
+rayfin/.env*
+rayfin/.deployments.json
+rayfin/.temp/
+
+# Local deployment config (tenant/workspace identifiers) — copy site/config.example.js to site/config.js
+site/config.js
+
+# Claude Code harness config (local)
+.claude/
+
+# Agent context — local only, never on the deploy repo
+.agents/
+AGENTS.md
+.mcp.json
+
+# Local design docs — kept on disk, not shipped to the deploy repo
+/docs/
+
+# Local analysis artifacts (NOT data.duckdb — that's the tracked demo fallback DB)
+query_log*.csv
+
+# Editor / OS
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
