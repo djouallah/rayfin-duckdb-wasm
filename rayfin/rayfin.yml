@@ -10,7 +10,7 @@ services:
       enabled: true
     allowedRedirectUris:
       - http://localhost:5173
-      # `rayfin up` adds your deployed hosting URL here automatically.
+      - https://witty-tulip-42d15256d2-westeurope.webapp.fabricapps.net
   data:
     enabled: false
   staticHosting:
