@@ -144,29 +144,28 @@ export function createDataSource(cfg = {}, auth, { onStatus = () => {} } = {}) {
     return { db, conn };
   }
 
-  // Write a small file to OneLake via the ADLS Gen2 DFS API: create (empty file) -> append the
-  // bytes -> flush to commit. `relPath` is resolved under the configured Files base, e.g.
-  // 'query_logs/<user>/<file>.csv'. Requires a OneLake baseUrl and an auth provider that yields a
+  // Write a small file to OneLake via the Blob endpoint single PUT (one atomic request with the
+  // body inline). `relPath` is resolved under the configured Files base, e.g.
+  // 'query_logs/<user>/<file>.csv'. We deliberately do NOT use the ADLS Gen2 DFS create→append→flush
+  // sequence: from a browser that left 0-byte files (the append's required Content-Length is a
+  // forbidden header we can't set, and a redirect on the PATCH drops the body). The single PUT
+  // writes the bytes in one shot. Requires a OneLake baseUrl and an auth provider yielding a
   // storage.azure.com bearer token; throws on a same-origin/static deploy where baseUrl is empty.
   async function uploadFile(relPath, content, contentType = 'application/octet-stream') {
     if (!baseUrl) throw new Error('OneLake write needs dataBaseUrl to be set (it is empty on same-origin/static deploys).');
-    const url = `${baseUrl}/${String(relPath).replace(/^\/+/, '')}`;
+    // The DFS read host doesn't take blob PUTs — target the Blob endpoint for the write.
+    const url = `${baseUrl}/${String(relPath).replace(/^\/+/, '')}`
+      .replace('onelake.dfs.fabric.microsoft.com', 'onelake.blob.fabric.microsoft.com');
     const bytes = new TextEncoder().encode(content);
+    const run = () => fetch(url, {
+      method: 'PUT',
+      headers: { ...auth.getHeaders(), 'x-ms-blob-type': 'BlockBlob', 'Content-Type': contentType },
+      body: bytes,
+    });
     // Retry once through auth.refresh() on a 401 (stale token), mirroring the read path.
-    const send = async (suffix, init) => {
-      const run = () => fetch(url + suffix, { ...init, headers: { ...auth.getHeaders(), ...(init.headers || {}) } });
-      let r = await run();
-      if (r.status === 401) { await auth.refresh(); r = await run(); }
-      return r;
-    };
-
-    let r = await send('?resource=file', { method: 'PUT' });
-    if (!r.ok) throw new Error(`OneLake create failed: HTTP ${r.status}`);
-    // Browser sets Content-Length from the body (it's a forbidden header we can't set ourselves).
-    r = await send('?action=append&position=0', { method: 'PATCH', headers: { 'Content-Type': contentType }, body: bytes });
-    if (!r.ok) throw new Error(`OneLake append failed: HTTP ${r.status}`);
-    r = await send(`?action=flush&position=${bytes.byteLength}`, { method: 'PATCH' });
-    if (!r.ok) throw new Error(`OneLake flush failed: HTTP ${r.status}`);
+    let r = await run();
+    if (r.status === 401) { await auth.refresh(); r = await run(); }
+    if (!r.ok) throw new Error(`OneLake upload failed: HTTP ${r.status}`);
     return url;
   }
 
