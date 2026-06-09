@@ -112,9 +112,8 @@
     // there's nothing to save or the deploy has no OneLake base (same-origin/static).
     window.saveQueryLogToOneLake = async () => {
       if (!_queryLog.length) { alert('Query log is empty — run a query first.'); return; }
-      const user = (currentUser || 'anonymous').replace(/[^a-zA-Z0-9._-]/g, '_');
       const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const path = `query_logs/${user}/query_log_${stamp}.csv`;
+      const path = `query_logs/data/query_log_${stamp}.csv`;
       setStatus('Saving query log to OneLake…', 'loading');
       try {
         const url = await data.uploadFile(path, queryLogCsv(), 'text/csv');
@@ -134,9 +133,10 @@
     const SESSION_ID = new Date().toISOString().replace(/[:.]/g, '-') + '-' + Math.random().toString(36).slice(2, 8);
     const QLOG_BUFFER_PREFIX = 'rayfin_qlog_pending_';
     function oneLakeConfigured() { return !!(cfg.dataBaseUrl || cfg.oneLakeBase); }
+    // All sessions write into one folder (user_id is a column in the CSV); the session id keeps
+    // concurrent sessions from clobbering each other and lets DuckDB read query_logs/data/*.csv.
     function sessionLogPath() {
-      const user = (currentUser || 'anonymous').replace(/[^a-zA-Z0-9._-]/g, '_');
-      return `query_logs/${user}/session_${SESSION_ID}.csv`;
+      return `query_logs/data/session_${SESSION_ID}.csv`;
     }
 
     let _flushTimer = null;
