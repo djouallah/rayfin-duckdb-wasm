@@ -207,8 +207,10 @@
         textKey
           ? String(a[key]).localeCompare(String(b[key])) * dir
           : (Number(a[key]) - Number(b[key])) * dir);
+      // User/email is intentionally NOT rendered (kept demo-friendly); it's still on every entry
+      // and in the CSV / OneLake export.
       tbody.innerHTML = sorted.map(e =>
-        `<tr><td>${e.n}</td><td style="white-space:nowrap;font-size:0.72rem">${e.ts}</td><td style="font-size:0.72rem">${String(e.user).replace(/</g,'&lt;')}</td><td style="font-family:monospace;font-size:0.72rem;white-space:pre-wrap;word-break:break-all">${e.sql.replace(/</g,'&lt;')}</td><td>${e.rows}</td><td>${e.ms}</td></tr>`
+        `<tr><td>${e.n}</td><td style="white-space:nowrap;font-size:0.72rem">${e.ts}</td><td style="font-family:monospace;font-size:0.72rem;white-space:pre-wrap;word-break:break-all">${e.sql.replace(/</g,'&lt;')}</td><td>${e.rows}</td><td>${e.ms}</td></tr>`
       ).join('');
       for (const th of document.querySelectorAll('#queryLogTable thead th')) {
         const k = th.dataset.sort;
