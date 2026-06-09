@@ -23,6 +23,7 @@ function createNoAuth() {
     mode: 'none',
     async ensureSession() { return true; },
     getHeaders() { return {}; },
+    getUserId() { return 'anonymous'; },
     async refresh() { return true; },
   };
 }
@@ -91,6 +92,12 @@ function createMsalAuth(cfg) {
     mode: 'msal',
     ensureSession(interactive) { return acquire(interactive); },
     getHeaders() { return _token ? { Authorization: 'Bearer ' + _token } : {}; },
+    // Signed-in identity for telemetry/logging — UPN (e.g. user@tenant), falling back to the
+    // stable homeAccountId, or null before sign-in.
+    getUserId() {
+      const a = _msalApp && _msalApp.getActiveAccount();
+      return (a && (a.username || a.homeAccountId)) || null;
+    },
     async refresh() {
       try { return await acquire(false); } catch (e) { return false; }
     },
